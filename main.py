@@ -44,7 +44,7 @@ model = DecisionTreeRegressor()
 model.fit(train_features, train_targets)
 
 # Save the model to a file
-with open('model.pkl', 'wb') as file:
+with open("model.pkl", "wb") as file:
     pickle.dump(model, file)
 
 # Evaluate the model
@@ -59,7 +59,9 @@ predictions = target_scaler.inverse_transform(predictions.reshape(-1, 1)).flatte
 test_targets = target_scaler.inverse_transform(test_targets.reshape(-1, 1)).flatten()
 
 # Create a dataframe with predictions and true labels
-results = pd.DataFrame({"True Torque (Nm)": test_targets, "Predicted Torque (Nm)": predictions})
+results = pd.DataFrame(
+    {"True Torque (Nm)": test_targets, "Predicted Torque (Nm)": predictions}
+)
 
 print(results.head(10))
 
@@ -67,7 +69,9 @@ print(results.head(10))
 def objective(params):
     """Function to find optimal torque"""
     disc_thickness, disc_radius, activation_current, num_turns, air_gap = params
-    pred_torque = model.predict([[disc_thickness, disc_radius, activation_current, num_turns, air_gap]])
+    pred_torque = model.predict(
+        [[disc_thickness, disc_radius, activation_current, num_turns, air_gap]]
+    )
     prediction = np.array(pred_torque[0]).reshape(-1, 1)
     prediction = target_scaler.inverse_transform(prediction)
     return -prediction  # Negative because we want to maximize the torque
@@ -80,12 +84,18 @@ bounds = [(0.5, 2.5), (10, 50), (1, 20), (50, 300), (0.1, 1)]
 scaled_bounds = []
 
 for i, (lower, upper) in enumerate(bounds):
-    scaled_lower = feature_scaler.transform(np.array([[lower if j == i else 0 for j in range(len(bounds))]]))[0][i]
-    scaled_upper = feature_scaler.transform(np.array([[upper if j == i else 0 for j in range(len(bounds))]]))[0][i]
+    scaled_lower = feature_scaler.transform(
+        np.array([[lower if j == i else 0 for j in range(len(bounds))]])
+    )[0][i]
+    scaled_upper = feature_scaler.transform(
+        np.array([[upper if j == i else 0 for j in range(len(bounds))]])
+    )[0][i]
     scaled_bounds.append((scaled_lower, scaled_upper))
 
 # Find the optimal torque using a differential technique
-result = differential_evolution(objective, bounds, strategy='best1bin', maxiter=1000, popsize=15, tol=0.01)
+result = differential_evolution(
+    objective, bounds, strategy="best1bin", maxiter=1000, popsize=15, tol=0.01
+)
 optimal_params = result.x  # Get the optimal parameters
 
 # Print the optimal parameters
