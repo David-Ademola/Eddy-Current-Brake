@@ -1,50 +1,50 @@
 import numpy as np
 import pandas as pd
 
-# Given parameters
-min_current, max_current, current_step = 0.5, 5, 0.25
-min_omega, max_omega, omega_step = 0, 3000, 10
+# Set random seed for reproducibility
+np.random.seed(42)
+
+# Generate sample data
+N_SAMPLES: int = 500
+
+# Define ranges for each parameter
+rotating_disc_thickness = np.random.uniform(0.5, 2.5, N_SAMPLES)  # in cm
+disk_radius = np.random.uniform(10, 50, N_SAMPLES)  # in cm
+applied_current = np.random.uniform(1, 20, N_SAMPLES)  # in A
+number_of_turns = np.random.randint(50, 300, N_SAMPLES)  # number of turns in the coil
+air_gap = np.random.uniform(0.1, 1, N_SAMPLES)  # in cm
+
+# Create a DataFrame
+data = pd.DataFrame({
+    "Rotating Disc Thickness (cm)": rotating_disc_thickness,
+    "Disk Radius (cm)": disk_radius,
+    "Applied Current (A)": applied_current,
+    "Number of Turns": number_of_turns,
+    "Air Gap (cm)": air_gap
+})
 
 # Constants
-mu_0 = 4 * np.pi * 10**-7  # Permeability of free space (H/m)
-N_TURNS = 205  # Number of turns per pole
-GAP_WIDTH = 2 * 10**-3  # Air-gap width (m)
-SIGMA = 18560000  # Conductivity of disk (S/m)
-RADIUS = 0.02  # RADIUS of electromagnet (m)
-THICKNESS = 0.01  # THICKNESS of disk (m)
-k = 1  # Constant, adjust based on empirical data
+K: float = 0.1  # scaling factor
 
-
-# Function to calculate torque
-def calculate_torque(input_current: float, shaft_speed: float) -> float:
-    mag_flux_density = (
-        mu_0 * N_TURNS * input_current
-    ) / GAP_WIDTH  # Magnetic flux density
-    shaft_speed_rads = shaft_speed * 2 * np.pi / 60  # Convert RPM to rad/s
-    torque = (
-        k * (mag_flux_density*2 * SIGMA * RADIUS*2 * shaft_speed_rads) / THICKNESS
-    )  # Torque
-
-    return torque
-
-
-# Generate the dataset
-data = [
-    [current, omega_rpm, calculate_torque(current, omega_rpm)]
-    for current in np.arange(min_current, max_current + current_step, current_step)
-    for omega_rpm in np.arange(min_omega, max_omega + omega_step, omega_step)
-]
-
-# Convert to dataframe
-dataframe = pd.DataFrame(
-    data, columns=["Excitation Current (A)", "Shaft Speed (RPM)", "Torque (Nm)"]
+# Generate braking torque using the hypothetical formula
+braking_torque = (
+    K *
+    (1 / data["Air Gap (cm)"]) *
+    (data["Applied Current (A)"] ** 2) *
+    data["Number of Turns"] *
+    data["Disk Radius (cm)"] *
+    (1 / data["Rotating Disc Thickness (cm)"])
 )
 
-# Display the first 10 rows
-print(dataframe.head(50))
+# Add random noise to simulate real-world variations
+noise = np.random.normal(0, 10, N_SAMPLES)  # mean 0, std 10
+braking_torque += noise
 
-# Save DataFrame to CSV file
-csv_file_path = "eddy_current_brake_dataset.csv"
-dataframe.to_csv(csv_file_path, index=False)
+# Add the target variable to the dataset
+data["Braking Torque (Nm)"] = braking_torque
+# Round all columns in the dataframe to two decimal places
+data = data.round(2)
 
-print(f"DataFrame saved as {csv_file_path}")
+# Display the first few rows of the dataset with the target variable
+print(data.head())
+data.to_csv("dataset.csv", index=False)  # Save as a CSV file
