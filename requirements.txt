@@ -1,5 +1,8 @@
 numpy
 pandas
 matplotlib
+seaborn
+scipy
 scikit-learn
+keras
 tensorflow==2.15.0
