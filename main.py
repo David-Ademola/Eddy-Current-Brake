@@ -98,16 +98,16 @@ for i, (lower, upper) in enumerate(bounds):
 result = differential_evolution(
     objective, bounds, strategy="best1bin", maxiter=1000, popsize=15, tol=0.01
 )
-optimal_params = result.x  # Get the optimal parameters
-print(optimal_params)
+optimal_parameters = result.x  # Get the optimal parameters
+print(optimal_parameters)
 
 # Print the optimal parameters
-optimal_params[-1] = round(optimal_params[-1], 2)
+optimal_parameters[-1] = round(optimal_parameters[-1], 2)
 columns = features.columns
 
 for i in range(4):
-    print(f"{columns[i]}: {round(optimal_params[i])}")
-print(f"{columns[-1]}: {optimal_params[-1]}")
+    print(f"{columns[i]}: {round(optimal_parameters[i])}")
+print(f"{columns[-1]}: {optimal_parameters[-1]}")
 
 # Combine features and target into one dataframe
 data = features.copy()
@@ -130,13 +130,13 @@ activation_current_values = np.arange(2, 20, 5)
 predicted_torque_values = []
 
 # Use the optimal parameters for other features and vary the applied current
-for activation_current in activation_current_values:
-    params = optimal_params.copy()
-    params[2] = (
-        activation_current  # Set the activation current to the current value in the loop
+for applied_current in activation_current_values:
+    parameters = optimal_parameters.copy()
+    parameters[2] = (
+        applied_current  # Set the activation current to the current value in the loop
     )
-    params = feature_scaler.transform([params])
-    predicted_torque = model.predict(params)
+    parameters = feature_scaler.transform([parameters])
+    predicted_torque = model.predict(parameters)
     pred = np.array(predicted_torque[0]).reshape(-1, 1)
     pred = target_scaler.inverse_transform(pred)
     predicted_torque_values.append(pred[0][0])
@@ -158,11 +158,11 @@ air_gap_values = np.arange(0.1, 1.5)
 predicted_torque_values = []
 
 # Use the optimal parameters for other features and vary the air gap
-for air_gap in air_gap_values:
-    params = optimal_params.copy()
-    params[-1] = air_gap  # Set the air gap to the current value in the loop
-    params = feature_scaler.transform([params])
-    predicted_torque = model.predict(params)
+for air_space in air_gap_values:
+    parameters = optimal_parameters.copy()
+    parameters[-1] = air_space  # Set the air gap to the current value in the loop
+    parameters = feature_scaler.transform([parameters])
+    predicted_torque = model.predict(parameters)
     pred = np.array(predicted_torque[0]).reshape(-1, 1)
     pred = target_scaler.inverse_transform(pred)
     predicted_torque_values.append(pred[0][0])
