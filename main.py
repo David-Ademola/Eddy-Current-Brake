@@ -2,6 +2,8 @@ import pickle
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot
 from scipy.optimize import differential_evolution
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.model_selection import train_test_split
@@ -97,6 +99,7 @@ result = differential_evolution(
     objective, bounds, strategy="best1bin", maxiter=1000, popsize=15, tol=0.01
 )
 optimal_params = result.x  # Get the optimal parameters
+print(optimal_params)
 
 # Print the optimal parameters
 optimal_params[-1] = round(optimal_params[-1], 2)
@@ -105,3 +108,71 @@ columns = features.columns
 for i in range(4):
     print(f"{columns[i]}: {round(optimal_params[i])}")
 print(f"{columns[-1]}: {optimal_params[-1]}")
+
+# Combine features and target into one dataframe
+data = features.copy()
+data["Braking Torque (Nm)"] = targets
+
+# Compute the correlation matrix
+corr_matrix = data.corr()
+
+# Display the correlation matrix
+pyplot.figure(figsize=(12, 10))
+sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap="coolwarm", cbar=True, square=True)
+pyplot.title("Correlation Matrix")
+pyplot.savefig("Correlation Matrix Heat Map.png")
+pyplot.show()
+
+# Generate a range of values for applied current (2 to 20 with step 2)
+activation_current_values = np.arange(2, 20, 5)
+
+# Prepare a list to hold the predicted braking torque values
+predicted_torque_values = []
+
+# Use the optimal parameters for other features and vary the applied current
+for activation_current in activation_current_values:
+    params = optimal_params.copy()
+    params[2] = (
+        activation_current  # Set the activation current to the current value in the loop
+    )
+    params = feature_scaler.transform([params])
+    predicted_torque = model.predict(params)
+    pred = np.array(predicted_torque[0]).reshape(-1, 1)
+    pred = target_scaler.inverse_transform(pred)
+    predicted_torque_values.append(pred[0][0])
+
+# Plot the predicted braking torque against the applied current
+pyplot.figure(figsize=(10, 6))
+pyplot.plot(activation_current_values, predicted_torque_values, marker="o")
+pyplot.title("Predicted Braking Torque vs Activation Current")
+pyplot.xlabel("Activation Current (A)")
+pyplot.ylabel("Predicted Braking Torque (Nm)")
+pyplot.grid(True)
+pyplot.savefig("Braking Torque - Activation Current.png")
+pyplot.show()
+
+# Generate a range of values for air gap (0.1 to 1.5)
+air_gap_values = np.arange(0.1, 1.5)
+
+# Prepare a list to hold the predicted braking torque values
+predicted_torque_values = []
+
+# Use the optimal parameters for other features and vary the air gap
+for air_gap in air_gap_values:
+    params = optimal_params.copy()
+    params[-1] = air_gap  # Set the air gap to the current value in the loop
+    params = feature_scaler.transform([params])
+    predicted_torque = model.predict(params)
+    pred = np.array(predicted_torque[0]).reshape(-1, 1)
+    pred = target_scaler.inverse_transform(pred)
+    predicted_torque_values.append(pred[0][0])
+
+# Plot the predicted braking torque against the air gap
+pyplot.figure(figsize=(10, 6))
+pyplot.plot(air_gap_values, predicted_torque_values, marker="o")
+pyplot.title("Predicted Braking Torque vs Air Gap")
+pyplot.xlabel("Air Gap (cm)")
+pyplot.ylabel("Predicted Braking Torque (Nm)")
+pyplot.grid(True)
+pyplot.savefig("Braking Torque - Air Gap.png")
+pyplot.show()
