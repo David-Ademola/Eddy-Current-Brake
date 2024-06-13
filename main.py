@@ -152,7 +152,7 @@ pyplot.savefig("Braking Torque - Activation Current.png")
 pyplot.show()
 
 # Generate a range of values for air gap (0.1 to 1.5)
-air_gap_values = np.arange(0.1, 1.5)
+air_gap_values = np.arange(0.1, 5.0)
 
 # Prepare a list to hold the predicted braking torque values
 predicted_torque_values = []
